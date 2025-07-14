@@ -42,7 +42,7 @@ inputs:
     default: 'false'
     required: false
   cache-dependencies:
-    description: "Enable installed dependency caching. Default: 'false'"
+    description: "Enable installed dependency caching. Default: 'true'"
     default: 'true'
     required: false
   token:
