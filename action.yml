@@ -51,6 +51,10 @@ inputs:
       not supplied by the user. When running this action on github.com, the default value is sufficient. When running on
       GHES, you can pass a personal access token for github.com if you are experiencing rate limiting.
     default: ${{ github.server_url == 'https://github.com' && github.token || '' }}
+  disable-caching:
+    description: "Disable the cache actions in this workflow."
+    required: false
+    default: 'false'
 outputs:
   status:
     description: Apply Status. Either 'succeeded' or 'failed'
@@ -384,7 +388,7 @@ runs:
     - name: Cache .terraform
       id: cache
       uses: actions/cache@v4
-      if: env.ACTIONS_ENABLED == 'true'
+      if: env.ACTIONS_ENABLED == 'true' && inputs.disable-caching != 'true'
       with:
         path: |
           ${{ steps.vars.outputs.component_path }}/.terraform
