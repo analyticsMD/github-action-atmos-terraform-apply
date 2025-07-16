@@ -160,6 +160,7 @@ runs:
             "terraform-version": (.settings.integrations.github.gitops."terraform-version" // "") | tostring,
             "enable-infracost": (.settings.integrations.github.gitops."infracost-enabled" // "") | tostring,
             "terraform-plan-role": (.settings.integrations.github.gitops.role.plan // "") | tostring,
+            "terraform-apply-role": (.settings.integrations.github.gitops.role.apply // "") | tostring,
             "aws-region": (.settings.integrations.github.gitops."artifact-storage".region // "") | tostring,
             "terraform-state-role": (.settings.integrations.github.gitops."artifact-storage".role // "") | tostring,
             "terraform-state-table": (.settings.integrations.github.gitops."artifact-storage".table // "") | tostring,
