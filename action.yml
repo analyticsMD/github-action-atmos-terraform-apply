@@ -45,6 +45,10 @@ inputs:
     description: "Enable installed dependency caching. Default: 'true'"
     default: 'true'
     required: false
+  install-dependencies:
+    description: "Whether to install dependencies with Aqua. If false, it is assumed that the runner already has the necessary dependencies installed. Default: 'true'"
+    required: false
+    default: 'true'
   token:
     description:
       Used to pull node distributions for Atmos from Cloud Posse's GitHub repository. Since there's a default, this is typically
@@ -63,10 +67,10 @@ outputs:
 runs:
   using: "composite"
   steps:
-#    - name: Install Node
-#      uses: actions/setup-node@v4
-#      with:
-#        node-version: 20
+    - name: Install Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
 
     - name: Checkout
       if: ${{ inputs.skip-checkout != 'true' }}
@@ -79,12 +83,13 @@ runs:
       run: |-
         echo "ATMOS_CLI_CONFIG_PATH=$(realpath ${{ inputs.atmos-config-path }})" >> $GITHUB_ENV
 
-#    - name: Install Atmos
-#      uses: cloudposse/github-action-setup-atmos@v2
-#      with:
-#        atmos-version: ${{ inputs.atmos-version }}
-#        token: ${{ inputs.token }}
-#        install-wrapper: false
+    - name: Install Atmos
+      uses: cloudposse/github-action-setup-atmos@v2
+      if: ${{ inputs.install-dependencies == 'true' }}
+      with:
+        atmos-version: ${{ inputs.atmos-version }}
+        token: ${{ inputs.token }}
+        install-wrapper: false
 
     - name: Get atmos settings
       id: atmos-settings
@@ -198,23 +203,24 @@ runs:
         # Clean up large variable to free memory
         unset COMPONENT_CONFIG
 
-#    - name: Install Terraform
-#      if: ${{ fromJson(steps.atmos-settings.outputs.settings).terraform-version != '' && fromJson(steps.atmos-settings.outputs.settings).terraform-version != 'null' }}
-#      uses: hashicorp/setup-terraform@v3
-#      with:
-#        terraform_version: ${{ fromJson(steps.atmos-settings.outputs.settings).terraform-version }}
-#        terraform_wrapper: false
+    - name: Install Terraform
+      if: ${{ inputs.install-dependencies == 'true' && fromJson(steps.atmos-settings.outputs.settings).terraform-version != '' && fromJson(steps.atmos-settings.outputs.settings).terraform-version != 'null' }}
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ fromJson(steps.atmos-settings.outputs.settings).terraform-version }}
+        terraform_wrapper: false
 
- #   - name: Install Dependencies
- #     uses: cloudposse-github-actions/install-gh-releases@v1
- #     with:
- #       cache: ${{ inputs.cache-dependencies }}
- #       config: |-
- #         opentofu/opentofu: 
- #           tag: ${{ startsWith(fromJson(steps.atmos-settings.outputs.settings).opentofu-version, 'v') && fromJson(steps.atmos-settings.outputs.settings).opentofu-version || format('v{0}', fromJson(steps.atmos-settings.outputs.settings).opentofu-version) }}
- #           skip: ${{ fromJson(steps.atmos-settings.outputs.settings).opentofu-version == '' || fromJson(steps.atmos-settings.outputs.settings).opentofu-version == 'null' }}
- #         suzuki-shunsuke/tfcmt: v4.14.0
- #         terraform-docs/terraform-docs: v0.18.0
+    - name: Install Dependencies
+      if: ${{ inputs.install-dependencies == 'true' }}
+      uses: cloudposse-github-actions/install-gh-releases@v1
+      with:
+        cache: ${{ inputs.cache-dependencies }}
+        config: |-
+          opentofu/opentofu: 
+            tag: ${{ startsWith(fromJson(steps.atmos-settings.outputs.settings).opentofu-version, 'v') && fromJson(steps.atmos-settings.outputs.settings).opentofu-version || format('v{0}', fromJson(steps.atmos-settings.outputs.settings).opentofu-version) }}
+            skip: ${{ fromJson(steps.atmos-settings.outputs.settings).opentofu-version == '' || fromJson(steps.atmos-settings.outputs.settings).opentofu-version == 'null' }}
+          suzuki-shunsuke/tfcmt: v4.14.0
+          terraform-docs/terraform-docs: v0.18.0
 
     - name: Configure Plan AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -352,7 +358,7 @@ runs:
         fi
 
     - name: Setup Infracost
-      if: env.INFRACOST_ENABLED == 'true'
+      if: ${{ inputs.install-dependencies == 'true' && env.INFRACOST_ENABLED == 'true' }}
       uses: infracost/actions/setup@v3
       with:
         api-key: ${{ inputs.infracost-api-key }}
