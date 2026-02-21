@@ -45,6 +45,10 @@ inputs:
     description: "Enable installed dependency caching. Default: 'true'"
     default: 'true'
     required: false
+  install-dependencies:
+    description: "Whether to install dependencies with Aqua. If false, it is assumed that the runner already has the necessary dependencies installed. Default: 'true'"
+    required: false
+    default: 'true'
   token:
     description:
       Used to pull node distributions for Atmos from Cloud Posse's GitHub repository. Since there's a default, this is typically
@@ -81,6 +85,7 @@ runs:
 
     - name: Install Atmos
       uses: cloudposse/github-action-setup-atmos@v2
+      if: ${{ inputs.install-dependencies == 'true' }}
       with:
         atmos-version: ${{ inputs.atmos-version }}
         token: ${{ inputs.token }}
@@ -199,13 +204,14 @@ runs:
         unset COMPONENT_CONFIG
 
     - name: Install Terraform
-      if: ${{ fromJson(steps.atmos-settings.outputs.settings).terraform-version != '' && fromJson(steps.atmos-settings.outputs.settings).terraform-version != 'null' }}
+      if: ${{ inputs.install-dependencies == 'true' && fromJson(steps.atmos-settings.outputs.settings).terraform-version != '' && fromJson(steps.atmos-settings.outputs.settings).terraform-version != 'null' }}
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: ${{ fromJson(steps.atmos-settings.outputs.settings).terraform-version }}
         terraform_wrapper: false
 
     - name: Install Dependencies
+      if: ${{ inputs.install-dependencies == 'true' }}
       uses: cloudposse-github-actions/install-gh-releases@v1
       with:
         cache: ${{ inputs.cache-dependencies }}
@@ -352,7 +358,7 @@ runs:
         fi
 
     - name: Setup Infracost
-      if: env.INFRACOST_ENABLED == 'true'
+      if: ${{ inputs.install-dependencies == 'true' && env.INFRACOST_ENABLED == 'true' }}
       uses: infracost/actions/setup@v3
       with:
         api-key: ${{ inputs.infracost-api-key }}
