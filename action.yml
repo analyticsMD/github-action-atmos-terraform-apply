@@ -68,13 +68,13 @@ runs:
   using: "composite"
   steps:
     - name: Install Node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
-        node-version: 20
+        node-version: 24
 
     - name: Checkout
       if: ${{ inputs.skip-checkout != 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ inputs.sha }}
 
@@ -223,7 +223,7 @@ runs:
           terraform-docs/terraform-docs: v0.18.0
 
     - name: Configure Plan AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@v6
       if: ${{ fromJson(steps.atmos-settings.outputs.settings).aws-region != '' &&
           fromJson(steps.atmos-settings.outputs.settings).aws-region != 'null' &&
           fromJson(steps.atmos-settings.outputs.settings).terraform-apply-role != '' &&
@@ -280,7 +280,7 @@ runs:
         echo "lock_file=$LOCK_FILE" >> $GITHUB_OUTPUT
 
     - name: Configure Plan AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@v6
       if: ${{ ( fromJson(steps.atmos-settings.outputs.settings).plan-repository-type == 's3' ||
                 fromJson(steps.atmos-settings.outputs.settings).plan-repository-type == ''  ||
                 fromJson(steps.atmos-settings.outputs.settings).plan-repository-type == 'null' ) &&
@@ -336,7 +336,7 @@ runs:
         bucketName: ${{ fromJson(steps.atmos-settings.outputs.settings).terraform-state-bucket }}
 
     - name: Configure Plan AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@v6
       if: ${{ fromJson(steps.atmos-settings.outputs.settings).aws-region != '' &&
         fromJson(steps.atmos-settings.outputs.settings).aws-region != 'null' &&
         fromJson(steps.atmos-settings.outputs.settings).terraform-apply-role != '' &&
@@ -411,7 +411,7 @@ runs:
 
     - name: Cache .terraform
       id: cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       if: env.ACTIONS_ENABLED == 'true' && inputs.disable-caching != 'true'
       with:
         path: |
