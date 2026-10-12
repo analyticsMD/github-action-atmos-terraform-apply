@@ -279,6 +279,13 @@ runs:
         echo "plan_file=$PLAN_FILE" >> $GITHUB_OUTPUT
         echo "lock_file=$LOCK_FILE" >> $GITHUB_OUTPUT
 
+        # A committed lockfile is the source of truth; plan-storage getPlan refuses to overwrite it
+        if [[ -f "$LOCK_FILE" ]]; then
+          echo "lock_file_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "lock_file_exists=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: Configure Plan AWS Credentials
       uses: aws-actions/configure-aws-credentials@v6
       if: ${{ ( fromJson(steps.atmos-settings.outputs.settings).plan-repository-type == 's3' ||
@@ -316,7 +323,7 @@ runs:
         bucketName: ${{ fromJson(steps.atmos-settings.outputs.settings).terraform-state-bucket }}
 
     - name: Retrieve Lockfile
-      if: ${{ env.ACTIONS_ENABLED == 'true' }}
+      if: ${{ env.ACTIONS_ENABLED == 'true' && steps.vars.outputs.lock_file_exists != 'true' }}
       uses: cloudposse/github-action-terraform-plan-storage@v1
       continue-on-error: true
       with:
